@@ -75,10 +75,10 @@ app.UseSwaggerUI(c =>
 
 app.UseHttpsRedirection();
 
-app.UseRequestLocalization(new RequestLocalizationOptions
-{
-    ApplyCurrentCultureToResponseHeaders = true
-});
+//app.UseRequestLocalization(new RequestLocalizationOptions
+//{
+//    ApplyCurrentCultureToResponseHeaders = true
+//});
 
 app.UseCors();
 

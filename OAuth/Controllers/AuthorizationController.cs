@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using OAuth.Data;
 using OAuth.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
 
 namespace OAuth.Controllers
 {
@@ -50,6 +51,12 @@ namespace OAuth.Controllers
            //Перевіряємо чи на сервері авторизації існує клієнт з Id з запиту
             var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
                               throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
+
+            //Отримуємо мову користувача
+            var lang = HttpContext.Response.Headers.ContentLanguage;
+            //Додаємо її до кукі "language"
+            Response.Cookies.Append("language",lang,
+                         new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
             //Зберігаємо codeChallenge та codeMethod з запиту
             var codeChallenge = request.CodeChallenge;
@@ -138,11 +145,20 @@ namespace OAuth.Controllers
                 CodeChallenge = codeChallenge,
                 CodeChallengeMethod = codeChallengeMethod,
                 UserId = userId,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow,
+                UserLanguage = lang
             };
             await _authContext.AuthCodeChallenge.AddAsync(authCodeChallenge);
+
+            //Знаходимо нашого користувача та оновлюємо для нього мову в БД
+            var authUser = await _authContext.AuthUsers.FirstOrDefaultAsync(x=>x.Email == userId);
+            authUser.Language = lang;
+
+            _authContext.AuthUsers.Update(authUser);
+
+            //Зберігаємо зміни в БД
             await _authContext.SaveChangesAsync();
-            
+
             //HttpContext.Session.SetString("codeChallenge", codeChallenge);
             //HttpContext.Session.SetString("codeChallengeMethod", codeChallengeMethod);
 

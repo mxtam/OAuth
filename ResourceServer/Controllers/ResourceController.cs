@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 
 namespace ResourceServer.Controllers
@@ -9,19 +10,16 @@ namespace ResourceServer.Controllers
     [Route("resources")]
     public class ResourceController:Controller
     {
+
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetSecretResources()
         {
-            var lang = HttpContext.Response.Headers.ContentLanguage;
-
-            Response.Cookies.Append(
-                CookieRequestCultureProvider.DefaultCookieName,
-                    CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(lang)),
-                         new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
-
-
+            //Отримуємо користувача
             var user = HttpContext.User?.Identity?.Name;
+
+            //Отримуємо кукі для мови з запиту 
+            var lang = Request.Cookies["language"];
 
             if (lang == "uk-UA")
             {

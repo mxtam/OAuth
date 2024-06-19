@@ -8,6 +8,7 @@ namespace OAuth.Services;
 
 public class AuthorizationService
 {
+    //Метод для парсингу параметрів з форми або з рядка запиту
     public IDictionary<string, StringValues> ParseOAuthParameters(HttpContext httpContext, List<string>? excluding = null)
     {
         excluding ??= new List<string>();
@@ -23,13 +24,14 @@ public class AuthorizationService
         return parameters;
 
     }
-
+    //Метод для конструювання посилання для переанправлення
     public string BuildRedirectUrl(HttpRequest httpRequest, IDictionary<string, StringValues> oauthParameters)
     {
         var url = httpRequest.PathBase + httpRequest.Path + QueryString.Create(oauthParameters);
         return url;
     }
 
+    //Метод для перевірки автентифікації
     public bool IsAuthenticated(AuthenticateResult authenticateResult, OpenIddictRequest request)
     {
         if (!authenticateResult.Succeeded)
@@ -52,7 +54,7 @@ public class AuthorizationService
 
         return true;
     }
-
+    //В цьому методі ми додаємо клейми нашого користувача до access token
     public static List<string> GetDestinations(ClaimsIdentity identity, Claim claim)
     {
         var destinations = new List<string>();

@@ -12,7 +12,8 @@ namespace OAuth
             {
                 _serviceProvider = serviceProvider;
             }
-
+            
+            //Мето для додавання api scopes
             public async Task AddScopes()
             {
                 await using var scope = _serviceProvider.CreateAsyncScope();
@@ -35,7 +36,8 @@ namespace OAuth
                 }
                 });
             }
-
+            //Додаємо web-client до списку клієнтів серверу авторизації(схожим чином можемо зробити метод, 
+            //наприклад для react-client)
             public async Task AddWebClient()
             {
                 await using var scope = _serviceProvider.CreateAsyncScope();

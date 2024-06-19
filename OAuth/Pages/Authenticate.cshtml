@@ -12,11 +12,16 @@
 
 Authenticate
 
-<div>@Model.AuthStatus</div>
 <div>Return url: @Model.ReturnUrl</div>
 
 <form method="post">
-    <input name="email" value="@Model.Email" />
-    <input name="password" value="@Model.Password" />
-    <input type="submit" />
+    <label>Email</label><br/>
+    <input name="email" /><br />
+    <label>Password</label><br />
+    <input type ="password" name="password" /><br />
+    <input type="submit" /><br />
 </form>
+
+<a asp-page="SignUp">Sign up</a>
+
+<div><label style="color:@Model.StatusColor">@Model.AuthStatus</label></div>

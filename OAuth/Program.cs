@@ -24,17 +24,18 @@ builder.Services.AddOpenIddict()
     })
     .AddServer(options =>
     {
-        options.RequireProofKeyForCodeExchange();
-
-        options.SetAuthorizationEndpointUris("connect/authorize")
+        //Встановлюємо ендпоінти для автризації
+       options.SetAuthorizationEndpointUris("connect/authorize")
                 .SetLogoutEndpointUris("connect/logout")
                 .SetTokenEndpointUris("connect/token")
-                .SetUserinfoEndpointUris("connect/userinfo");
+                /*.SetUserinfoEndpointUris("connect/userinfo")*/;
 
         options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
 
-        options.AllowAuthorizationCodeFlow();
+        //Включаємо підтрику Code Flow+PKCE
+        options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
 
+        //Ключ який необхідний при підключенні серверу ресурсів
         options.AddEncryptionKey(new SymmetricSecurityKey(
                             Convert.FromBase64String("DRjd/GnduI3Efzen9V9BvbNUfc/VKgXltV7Kbk9sMkY=")));
 
@@ -48,7 +49,7 @@ builder.Services.AddOpenIddict()
                 .EnableTokenEndpointPassthrough()
                 .EnableUserinfoEndpointPassthrough();
     });
-
+//Реєструємо сервіс авторизації
 builder.Services.AddTransient<AuthorizationService>();
 
 builder.Services.AddControllers();
@@ -60,6 +61,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         c.LoginPath = "/Authenticate";
     });
 
+//Реєструємо сервіс для заповнення клієнтів
 builder.Services.AddTransient<ClientsSeeder>();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -69,6 +71,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
+        //Додаємо ресурс сервер до CORS
         policy.WithOrigins("https://localhost:7002")
             .AllowAnyHeader();
     });
@@ -89,6 +92,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseHttpsRedirection();
+
+app.UseRequestLocalization( new RequestLocalizationOptions 
+{ 
+    ApplyCurrentCultureToResponseHeaders = true
+});
 
 app.UseCors();
 

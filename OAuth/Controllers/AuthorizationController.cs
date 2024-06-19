@@ -43,15 +43,19 @@ namespace OAuth.Controllers
         [HttpPost("~/connect/authorize")]
         public async Task<IActionResult> Authorize()
         {
+            //Перевірка правильності запиту Open Id Connect
             var request = HttpContext.GetOpenIddictServerRequest() ??
                           throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-            var codeChallenge = request.CodeChallenge;
-            var codeChallengeMethod = request.CodeChallengeMethod;
-
+           //Перевіряємо чи на сервері авторизації існує клієнт з Id з запиту
             var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
                               throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
 
+            //Зберігаємо codeChallenge та codeMethod з запиту
+            var codeChallenge = request.CodeChallenge;
+            var codeChallengeMethod = request.CodeChallengeMethod;
+
+            //Якщо клієнт серверу авторизації має тип не Explicit повертаємо помилку
             if (await _applicationManager.GetConsentTypeAsync(application) != ConsentTypes.Explicit)
             {
                 return Forbid(
@@ -64,10 +68,12 @@ namespace OAuth.Controllers
                     }));
             }
 
+           //Парсимо параметри з рядку запиту
             var parameters = _authService.ParseOAuthParameters(HttpContext, new List<string> { Parameters.Prompt });
 
             var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
+           //Перевіряємо чи користувач автентифікований, якщо ні, повертаємо його на сторінку автентифікації 
             if (!_authService.IsAuthenticated(result, request))
             {
                 return Challenge(properties: new AuthenticationProperties
@@ -88,10 +94,20 @@ namespace OAuth.Controllers
 
             var consentClaim = result.Principal.GetClaim(Consts.ConsentNaming);
 
-            //it might be extended in a way that consent claim will contain list of allowed client ids.
-            if (consentClaim != Consts.GrantAccessValue || request.HasPrompt(Prompts.Consent))
+            //Перевіряємо, якщо користувач відхилив доступ для автентифікації 
+            //ми виходимо з його запису та перенаправляємо на сторінку автентифікації
+            if (consentClaim == Consts.DenyAccessValue || request.HasPrompt(Prompts.Consent))
             {
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                var returnUrl = HttpUtility.UrlEncode(_authService.BuildRedirectUrl(HttpContext.Request, parameters));
+                var consentRedirectUrl = $"/Consent?returnUrl={returnUrl}";
+
+                return Redirect(consentRedirectUrl);
+            }
+            
+            if (consentClaim is null || request.HasPrompt(Prompts.Consent))
+            {
 
                 var returnUrl = HttpUtility.UrlEncode(_authService.BuildRedirectUrl(HttpContext.Request, parameters));
                 var consentRedirectUrl = $"/Consent?returnUrl={returnUrl}";
@@ -101,6 +117,7 @@ namespace OAuth.Controllers
 
             var userId = result.Principal.FindFirst(ClaimTypes.Email)!.Value;
 
+            //Встановлюємо клейми для користувача
             var identity = new ClaimsIdentity(
                 authenticationType: TokenValidationParameters.DefaultAuthenticationType,
                 nameType: Claims.Name,
@@ -115,6 +132,7 @@ namespace OAuth.Controllers
             identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
             identity.SetDestinations(c => AuthorizationService.GetDestinations(identity, c));
 
+            // Зберігаємо codeChallenge та codeMethod до БД
             var authCodeChallenge = new AuthorizationCodeChallenge
             {
                 CodeChallenge = codeChallenge,
@@ -122,7 +140,6 @@ namespace OAuth.Controllers
                 UserId = userId,
                 CreatedDate = DateTime.UtcNow
             };
-
             await _authContext.AuthCodeChallenge.AddAsync(authCodeChallenge);
             await _authContext.SaveChangesAsync();
             
@@ -147,6 +164,7 @@ namespace OAuth.Controllers
             var codeChallenge = string.Empty;
             var codeChallengeMethod = string.Empty;
 
+            //Дістаємо з БД наш codeChallenge та codeMethod та записуємо в змінні
             var authCodeChallenge = await _authContext.AuthCodeChallenge
                                                         .OrderByDescending(c => c.CreatedDate)
                                                             .FirstOrDefaultAsync(c => c.UserId == userId);
@@ -163,8 +181,10 @@ namespace OAuth.Controllers
 
             if (request.IsAuthorizationCodeGrantType())
             {
+                //Дістаємо codeVerifier з запиту
                 var codeVerifier = request.CodeVerifier;
-
+                //За дпомогою методу ValidateCodeVerfier перевіряємо наш codeVerifier, 
+                //у випадку некоректно наданого codeVerifier повертаємо помилку
                 if (!ValidateCodeVerifier(codeVerifier, codeChallenge, codeChallengeMethod))
                 {
                     return Forbid(
@@ -178,7 +198,7 @@ namespace OAuth.Controllers
             }
 
             
-
+            //Повертаємо помилку, якщо користувача не знайдено
             if (string.IsNullOrEmpty(userId))
             {
                 return Forbid(
@@ -191,6 +211,7 @@ namespace OAuth.Controllers
                     }));
             }
 
+            //Встановлюємо клейми для користувача
             var identity = new ClaimsIdentity(result.Principal.Claims,
                 authenticationType: TokenValidationParameters.DefaultAuthenticationType,
                 nameType: Claims.Name,
@@ -226,36 +247,36 @@ namespace OAuth.Controllers
 
             return true;
         }
+        //Ендпоінт для UserInfo
+        //[Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
+        //[HttpGet("~/connect/userinfo"), HttpPost("~/connect/userinfo")]
+        //public async Task<IActionResult> Userinfo()
+        //{
+        //    if (User.GetClaim(Claims.Subject) != Consts.Email)
+        //    {
+        //        return Challenge(
+        //            authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+        //            properties: new AuthenticationProperties(new Dictionary<string, string?>
+        //            {
+        //                [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidToken,
+        //                [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
+        //                    "The specified access token is bound to an account that no longer exists."
+        //            }));
+        //    }
 
-        [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
-        [HttpGet("~/connect/userinfo"), HttpPost("~/connect/userinfo")]
-        public async Task<IActionResult> Userinfo()
-        {
-            if (User.GetClaim(Claims.Subject) != Consts.Email)
-            {
-                return Challenge(
-                    authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
-                    properties: new AuthenticationProperties(new Dictionary<string, string?>
-                    {
-                        [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidToken,
-                        [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                            "The specified access token is bound to an account that no longer exists."
-                    }));
-            }
+        //    var claims = new Dictionary<string, object>(StringComparer.Ordinal)
+        //    {
+        //        // Note: the "sub" claim is a mandatory claim and must be included in the JSON response.
+        //        [Claims.Subject] = Consts.Email
+        //    };
 
-            var claims = new Dictionary<string, object>(StringComparer.Ordinal)
-            {
-                // Note: the "sub" claim is a mandatory claim and must be included in the JSON response.
-                [Claims.Subject] = Consts.Email
-            };
+        //    if (User.HasScope(Scopes.Email))
+        //    {
+        //        claims[Claims.Email] = Consts.Email;
+        //    }
 
-            if (User.HasScope(Scopes.Email))
-            {
-                claims[Claims.Email] = Consts.Email;
-            }
-
-            return Ok(claims);
-        }
+        //    return Ok(claims);
+        //}
 
         [HttpGet("~/connect/logout")]
         [HttpPost("~/connect/logout")]
@@ -270,6 +291,7 @@ namespace OAuth.Controllers
                     RedirectUri = "/"
                 });
         }
+
     }
 
 }

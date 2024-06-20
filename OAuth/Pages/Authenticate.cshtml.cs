@@ -33,10 +33,10 @@ public class AuthenticateModel : PageModel
 
         public async Task<IActionResult> OnPostAsync(string email, string password)
         {
-            //Шукаємо користувача за електронною поштою в БД
+            //Знаходимо користувача в БД за електронною поштою
             var user = await _authContext.AuthUsers.FirstOrDefaultAsync(x=>x.Email == email);
 
-            //Перевірка на правильність введення даних користувачем
+            //Перевірка на правильність введення даних 
             if (user == null)
             {
                 AuthStatus = "Incorrect email address";
@@ -48,9 +48,10 @@ public class AuthenticateModel : PageModel
                 return Page();
             }
 
-            //Порівнюємо введений пароль з збереженим хешем паролю в БД 
+            //Порівнюємо введений пароль з збереженим хешем паролю
             var verifiedPassword = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
-
+            
+            //Якщо пароль не співпадає відправляємо сторінку з повідомленням
             if (verifiedPassword == false)
             {
                 AuthStatus = "Password is invalid";

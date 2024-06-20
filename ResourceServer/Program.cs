@@ -10,11 +10,11 @@ builder.Services.AddControllers();
 builder.Services.AddOpenIddict()
                     .AddValidation(options =>
                     {
-                        //Сервер авторизації
+                        //Встановлюємо сервер авторизації
                         options.SetIssuer("https://localhost:7000/");
                         options.AddAudiences("resource_server_1");
 
-                        //Ключ для реєстрації нашого ресурс серверу на сервері авторизації(ідентичний ключу на сервері авторизації)
+                        //Ключ для реєстрації нашого ресурс серверу на сервері авторизації
                         options.AddEncryptionKey(new SymmetricSecurityKey(
                             Convert.FromBase64String("DRjd/GnduI3Efzen9V9BvbNUfc/VKgXltV7Kbk9sMkY=")));
 

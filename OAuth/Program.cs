@@ -24,7 +24,7 @@ builder.Services.AddOpenIddict()
     })
     .AddServer(options =>
     {
-        //Встановлюємо наші ендпоінти для автризації
+        //Set authorization endpoints
        options.SetAuthorizationEndpointUris("connect/authorize")
                 .SetLogoutEndpointUris("connect/logout")
                 .SetTokenEndpointUris("connect/token")
@@ -32,10 +32,10 @@ builder.Services.AddOpenIddict()
 
         options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
 
-        //Включаємо підтрику Authorization Code Flow+PKCE
+        //Enable Authorization Code Flow+PKCE
         options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
 
-        //Додаємо ключ який необхідний при підключенні серверу ресурсів
+        //Encryption key to connect our servers 
         options.AddEncryptionKey(new SymmetricSecurityKey(
                             Convert.FromBase64String("DRjd/GnduI3Efzen9V9BvbNUfc/VKgXltV7Kbk9sMkY=")));
 
@@ -49,7 +49,7 @@ builder.Services.AddOpenIddict()
                 .EnableTokenEndpointPassthrough()
                 .EnableUserinfoEndpointPassthrough();
     });
-//Додаємо сервіс авторизації
+//Adding auth service
 builder.Services.AddTransient<AuthorizationService>();
 
 builder.Services.AddControllers();
@@ -61,7 +61,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         c.LoginPath = "/Authenticate";
     });
 
-//Додаєм сервіс для заповнення клієнтів серверу авторизації
+//Adding client seeder service for our clients on auth server
 builder.Services.AddTransient<ClientsSeeder>();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -71,7 +71,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        //Додаємо ресурсний сервер до CORS
+        //Adding esource server to CORS
         policy.WithOrigins("https://localhost:7002")
             .AllowAnyHeader();
     });

@@ -133,7 +133,7 @@ namespace OAuth.Controllers
             identity.SetClaim(Claims.Subject, userId)
                 .SetClaim(Claims.Email, userId)
                 .SetClaim(Claims.Name, userId)
-                .SetClaims(Claims.Role, new List<string> { "user", "admin" }.ToImmutableArray());
+                .SetClaims(Claims.Role, new List<string> { "User", "Admin" }.ToImmutableArray());
 
             identity.SetScopes(request.GetScopes());
             identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
@@ -150,11 +150,16 @@ namespace OAuth.Controllers
             };
             await _authContext.AuthCodeChallenge.AddAsync(authCodeChallenge);
 
-            //Знаходимо нашого користувача та оновлюємо для нього мову в БД
-            var authUser = await _authContext.AuthUsers.FirstOrDefaultAsync(x=>x.Email == userId);
-            authUser.Language = lang;
-
-            _authContext.AuthUsers.Update(authUser);
+            //Знаходимо нашого користувача якщо він існує та оновлюємо для нього мову в БД
+            if (userId != null) 
+            {
+                var authUser = await _authContext.AuthUsers.FirstOrDefaultAsync(x => x.Email == userId);
+                if (authUser != null) 
+                {
+                    authUser.Language = lang;
+                    _authContext.AuthUsers.Update(authUser);
+                }
+            }
 
             //Зберігаємо зміни в БД
             await _authContext.SaveChangesAsync();

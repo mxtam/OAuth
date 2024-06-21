@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 var connectionString = builder.Configuration.GetConnectionString("AuthConnectionString");
+var testConnectionString = builder.Configuration.GetConnectionString("TestConnectionString");
 // Add services to the container.
 builder.Services.AddDbContext<AuthContext>
     (options => {

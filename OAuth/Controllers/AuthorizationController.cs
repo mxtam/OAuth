@@ -52,11 +52,8 @@ namespace OAuth.Controllers
             var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
                               throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
 
-            //Отримуємо мову користувача
+            //Отримуємо мову користувача з браузера
             var lang = HttpContext.Response.Headers.ContentLanguage;
-            //Додаємо її до кукі "language"
-            Response.Cookies.Append("language",lang,
-                         new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
             //Зберігаємо codeChallenge та codeMethod з запиту
             var codeChallenge = request.CodeChallenge;
@@ -75,12 +72,12 @@ namespace OAuth.Controllers
                     }));
             }
 
-           //Парсимо параметри з рядку запиту
+            //Парсимо параметри з рядку запиту
             var parameters = _authService.ParseOAuthParameters(HttpContext, new List<string> { Parameters.Prompt });
 
             var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-           //Перевіряємо чи користувач автентифікований, якщо ні, повертаємо його на сторінку автентифікації 
+            //Перевіряємо чи користувач автентифікований, якщо ні, повертаємо його на сторінку автентифікації 
             if (!_authService.IsAuthenticated(result, request))
             {
                 return Challenge(properties: new AuthenticationProperties
@@ -98,7 +95,7 @@ namespace OAuth.Controllers
                     RedirectUri = _authService.BuildRedirectUrl(HttpContext.Request, parameters)
                 }, new[] { CookieAuthenticationDefaults.AuthenticationScheme });
             }
-
+            
             var consentClaim = result.Principal.GetClaim(Consts.ConsentNaming);
 
             //Перевіряємо, якщо користувач відхилив доступ для автентифікації 
@@ -150,14 +147,30 @@ namespace OAuth.Controllers
             };
             await _authContext.AuthCodeChallenge.AddAsync(authCodeChallenge);
 
-            //Знаходимо нашого користувача якщо він існує та оновлюємо для нього мову в БД
+            //Знаходимо нашого користувача, порівнюємо мови з БД та браузера, якщо вони не рівні додаємо в кукі саме мову з БД
             if (userId != null) 
             {
                 var authUser = await _authContext.AuthUsers.FirstOrDefaultAsync(x => x.Email == userId);
                 if (authUser != null) 
                 {
-                    authUser.Language = lang;
-                    _authContext.AuthUsers.Update(authUser);
+                    //Якщо в користувача пусте поле мови, беремо мову з ContentLanguage додаємо користувачу та встановлюємо кукі
+                    if (authUser.Language == null)
+                    { 
+                        authUser.Language = lang;
+                        _authContext.AuthUsers.Update(authUser);
+                        Response.Cookies.Append("language", lang);
+                    }
+                    //Якщо в користувача поле мови заповнено, але не збігається з ContentLanguage встановлюємо кукі з БД
+                    else if (authUser.Language != lang)
+                    {
+                        Response.Cookies.Append("language", authUser.Language);
+                    }
+                    //В усіх інших випадках передаємо в кукі мову встановлену в ContentLanguage
+                    else 
+                    {
+                        Response.Cookies.Append("language", lang);
+                    }
+                    
                 }
             }
 

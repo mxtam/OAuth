@@ -36,7 +36,8 @@ namespace OAuth.Data
                     //Password:password1
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("password1"),
                     //Role:User
-                    RoleId = 1
+                    RoleId = 1,
+                    Language = "uk-UA"
                 },
                     new AuthUser
                     {
@@ -45,7 +46,8 @@ namespace OAuth.Data
                         //Password:Admin@1
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1"),
                         //Role:Admin
-                        RoleId = 2
+                        RoleId = 2,
+                        Language= "en-US"
                     })
 ;        }
     }

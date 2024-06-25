@@ -75,6 +75,9 @@ builder.Services.AddCors(options =>
         //Adding esource server to CORS
         policy.WithOrigins("https://localhost:7002")
             .AllowAnyHeader();
+
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader();
     });
 });
 
@@ -84,6 +87,7 @@ using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<ClientsSeeder>();
     seeder.AddWebClient().GetAwaiter().GetResult();
+    seeder.AddReactClient().GetAwaiter().GetResult();
     seeder.AddScopes().GetAwaiter().GetResult();
 }
 

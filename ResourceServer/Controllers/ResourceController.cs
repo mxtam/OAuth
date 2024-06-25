@@ -10,7 +10,6 @@ namespace ResourceServer.Controllers
     [Route("resources")]
     public class ResourceController:Controller
     {
-
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetSecretResources()

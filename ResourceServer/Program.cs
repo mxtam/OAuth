@@ -58,11 +58,18 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddCors();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader();
+    });
+});
+
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
-
-
 
 app.UseSwagger();
 app.UseSwaggerUI(c => 

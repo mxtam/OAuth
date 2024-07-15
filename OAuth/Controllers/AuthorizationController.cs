@@ -121,6 +121,19 @@ namespace OAuth.Controllers
 
             var userId = result.Principal.FindFirst(ClaimTypes.Email)!.Value;
 
+            //Знаходимо нашого користувача
+            var authUser = await _authContext.AuthUsers.Include(b=>b.Role).FirstOrDefaultAsync(x => x.Email == userId);
+            var userRole = authUser.Role.RoleName;
+            if (authUser != null)
+            {
+                //Якщо в користувача пусте поле мови, беремо мову з ContentLanguage та додаємо користувачу 
+                if (authUser.Language == null)
+                {
+                    authUser.Language = lang;
+                    _authContext.AuthUsers.Update(authUser);
+                }
+            }
+            
             //Встановлюємо клейми для користувача
             var identity = new ClaimsIdentity(
                 authenticationType: TokenValidationParameters.DefaultAuthenticationType,
@@ -130,7 +143,8 @@ namespace OAuth.Controllers
             identity.SetClaim(Claims.Subject, userId)
                 .SetClaim(Claims.Email, userId)
                 .SetClaim(Claims.Name, userId)
-                .SetClaims(Claims.Role, new List<string> { "User", "Admin" }.ToImmutableArray());
+                .SetClaim(Claims.Role, userRole)
+                .SetClaim("UserLang", authUser.Language);
 
             identity.SetScopes(request.GetScopes());
             identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
@@ -145,40 +159,11 @@ namespace OAuth.Controllers
                 CreatedDate = DateTime.UtcNow,
                 UserLanguage = lang
             };
-            await _authContext.AuthCodeChallenge.AddAsync(authCodeChallenge);
 
-            //Знаходимо нашого користувача, порівнюємо мови з БД та браузера, якщо вони не рівні додаємо в кукі саме мову з БД
-            if (userId != null) 
-            {
-                var authUser = await _authContext.AuthUsers.FirstOrDefaultAsync(x => x.Email == userId);
-                if (authUser != null) 
-                {
-                    //Якщо в користувача пусте поле мови, беремо мову з ContentLanguage додаємо користувачу та встановлюємо кукі
-                    if (authUser.Language == null)
-                    { 
-                        authUser.Language = lang;
-                        _authContext.AuthUsers.Update(authUser);
-                        Response.Cookies.Append("language", lang);
-                    }
-                    //Якщо в користувача поле мови заповнено, але не збігається з ContentLanguage встановлюємо кукі з БД
-                    else if (authUser.Language != lang)
-                    {
-                        Response.Cookies.Append("language", authUser.Language);
-                    }
-                    //В усіх інших випадках передаємо в кукі мову встановлену в ContentLanguage
-                    else 
-                    {
-                        Response.Cookies.Append("language", lang);
-                    }
-                    
-                }
-            }
+            await _authContext.AuthCodeChallenge.AddAsync(authCodeChallenge);
 
             //Зберігаємо зміни в БД
             await _authContext.SaveChangesAsync();
-
-            //HttpContext.Session.SetString("codeChallenge", codeChallenge);
-            //HttpContext.Session.SetString("codeChallengeMethod", codeChallengeMethod);
 
             return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
@@ -195,6 +180,9 @@ namespace OAuth.Controllers
             var result = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             var userId = result.Principal.GetClaim(Claims.Subject);
 
+            var authUser = await _authContext.AuthUsers.Include(b => b.Role).FirstOrDefaultAsync(x => x.Email == userId);
+            var userRole = authUser.Role.RoleName;
+
             var codeChallenge = string.Empty;
             var codeChallengeMethod = string.Empty;
 
@@ -208,10 +196,6 @@ namespace OAuth.Controllers
                 codeChallenge = authCodeChallenge.CodeChallenge;
                 codeChallengeMethod = authCodeChallenge.CodeChallengeMethod;
             }
-
-            //var codeChallenge = HttpContext.Session.GetString("codeChallenge");
-            //var codeChallengeMethod = HttpContext.Session.GetString("codeChallengeMethod");
-
 
             if (request.IsAuthorizationCodeGrantType())
             {
@@ -231,7 +215,6 @@ namespace OAuth.Controllers
                 }
             }
 
-            
             //Повертаємо помилку, якщо користувача не знайдено
             if (string.IsNullOrEmpty(userId))
             {
@@ -254,7 +237,8 @@ namespace OAuth.Controllers
             identity.SetClaim(Claims.Subject, userId)
                 .SetClaim(Claims.Email, userId)
                 .SetClaim(Claims.Name, userId)
-                .SetClaims(Claims.Role, new List<string> { "user", "admin" }.ToImmutableArray());
+                .SetClaim(Claims.Role, userRole)
+                .SetClaim("UserLang", authUser.Language);
 
             identity.SetDestinations(c => AuthorizationService.GetDestinations(identity, c));
 
@@ -281,36 +265,50 @@ namespace OAuth.Controllers
 
             return true;
         }
+
         //Ендпоінт для UserInfo
-        //[Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
-        //[HttpGet("~/connect/userinfo"), HttpPost("~/connect/userinfo")]
-        //public async Task<IActionResult> Userinfo()
-        //{
-        //    if (User.GetClaim(Claims.Subject) != Consts.Email)
-        //    {
-        //        return Challenge(
-        //            authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
-        //            properties: new AuthenticationProperties(new Dictionary<string, string?>
-        //            {
-        //                [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidToken,
-        //                [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-        //                    "The specified access token is bound to an account that no longer exists."
-        //            }));
-        //    }
+        [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
+        [HttpGet("~/connect/userinfo"), HttpPost("~/connect/userinfo")]
+        public async Task<IActionResult> Userinfo()
+        {
+            var userId = User.GetClaim(Claims.Subject);
 
-        //    var claims = new Dictionary<string, object>(StringComparer.Ordinal)
-        //    {
-        //        // Note: the "sub" claim is a mandatory claim and must be included in the JSON response.
-        //        [Claims.Subject] = Consts.Email
-        //    };
+            var authUser = await _authContext.AuthUsers.Include(b => b.Role).FirstOrDefaultAsync(x => x.Email == userId);
 
-        //    if (User.HasScope(Scopes.Email))
-        //    {
-        //        claims[Claims.Email] = Consts.Email;
-        //    }
+            if (authUser is null)
+            {
+                return Challenge(
+                    authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                    properties: new AuthenticationProperties(new Dictionary<string, string?>
+                    {
+                        [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidToken,
+                        [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
+                            "The specified access token is bound to an account that no longer exists."
+                    }));
+            }
 
-        //    return Ok(claims);
-        //}
+            var claims = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                // Note: the "sub" claim is a mandatory claim and must be included in the JSON response.
+                [Claims.Subject] = userId
+            };
+
+            // Додавання всіх клеймів користувача
+            foreach (var claim in User.Claims)
+            {
+                if (!claims.ContainsKey(claim.Type))
+                {
+                    claims[claim.Type] = claim.Value;
+                }
+            }
+
+            if (User.HasScope(Scopes.Email))
+            {
+                claims[Claims.Email] = Consts.Email;
+            }
+
+            return Ok(claims);
+        }
 
         [HttpGet("~/connect/logout")]
         [HttpPost("~/connect/logout")]

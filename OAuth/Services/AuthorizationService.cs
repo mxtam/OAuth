@@ -59,10 +59,12 @@ public class AuthorizationService
     {
         var destinations = new List<string>();
 
-        if (claim.Type is OpenIddictConstants.Claims.Name or OpenIddictConstants.Claims.Email)
+        if (claim.Type is OpenIddictConstants.Claims.Name or 
+            OpenIddictConstants.Claims.Email or OpenIddictConstants.Claims.Role or "UserLang")
         {
             destinations.Add(OpenIddictConstants.Destinations.AccessToken);
 
+            //Якщо scope = openid додаємо клейми до Identity token
             if (identity.HasScope(OpenIddictConstants.Scopes.OpenId))
             {
                 destinations.Add(OpenIddictConstants.Destinations.IdentityToken);

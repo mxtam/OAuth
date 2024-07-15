@@ -17,10 +17,11 @@ namespace ResourceServer.Controllers
             //Отримуємо користувача
             var user = HttpContext.User?.Identity?.Name;
 
-            //Отримуємо кукі для мови з запиту 
-            var lang = Request.Cookies["language"];
+            //Отримуємо мову користувача з клеймів токена 
+            var userLang = HttpContext.User?.Claims?.FirstOrDefault(x=>x.Type== "UserLang")?.Value;
 
-            if (lang == "uk-UA")
+
+            if (userLang == "uk-UA")
             {
                 return Ok($"Привіт, {user}!");
             }

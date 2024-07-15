@@ -29,7 +29,7 @@ builder.Services.AddOpenIddict()
        options.SetAuthorizationEndpointUris("connect/authorize")
                 .SetLogoutEndpointUris("connect/logout")
                 .SetTokenEndpointUris("connect/token")
-                /*.SetUserinfoEndpointUris("connect/userinfo")*/;
+                .SetUserinfoEndpointUris("connect/userinfo");
 
         options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
 
@@ -88,6 +88,7 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<ClientsSeeder>();
     seeder.AddWebClient().GetAwaiter().GetResult();
     seeder.AddReactClient().GetAwaiter().GetResult();
+    seeder.AddOidcDebuggerClient().GetAwaiter().GetResult();
     seeder.AddScopes().GetAwaiter().GetResult();
 }
 

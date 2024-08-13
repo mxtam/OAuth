@@ -39,16 +39,17 @@ namespace OAuth.Data
                     RoleId = 1,
                     Language = "uk-UA"
                 },
-                    new AuthUser
-                    {
-                        Id = 2,
-                        Email = "admin_mail@mail.com",
-                        //Password:Admin@1
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1"),
-                        //Role:Admin
-                        RoleId = 2,
-                        Language= "en-US"
-                    })
+
+                new AuthUser
+                {
+                    Id = 2,
+                    Email = "admin_mail@mail.com",
+                    //Password:Admin@1
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1"),
+                    //Role:Admin
+                    RoleId = 2,
+                    Language= "en-US"
+                })
 ;        }
     }
 }

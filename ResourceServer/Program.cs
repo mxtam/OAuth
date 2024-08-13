@@ -1,11 +1,15 @@
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenIddict.Validation.AspNetCore;
+using ResourceServer.Data;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
-
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString");
 // Add services to the container.
-
+builder.Services.AddDbContext<ResourceContext>(options=>options.UseSqlServer(connectionString));
 builder.Services.AddControllers();
 builder.Services.AddOpenIddict()
                     .AddValidation(options =>
@@ -95,3 +99,40 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public class FileUploadOperationFilter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        var fileParams = context.MethodInfo.GetParameters()
+            .Where(p => p.ParameterType == typeof(IFormFile))
+            .ToArray();
+
+        if (fileParams.Length == 0)
+            return;
+
+        operation.Parameters.Clear();
+        operation.RequestBody = new OpenApiRequestBody
+        {
+            Content = new Dictionary<string, OpenApiMediaType>
+            {
+                ["multipart/form-data"] = new OpenApiMediaType
+                {
+                    Schema = new OpenApiSchema
+                    {
+                        Type = "object",
+                        Properties = new Dictionary<string, OpenApiSchema>
+                        {
+                            [fileParams[0].Name] = new OpenApiSchema
+                            {
+                                Type = "string",
+                                Format = "binary"
+                            }
+                        },
+                        Required = new HashSet<string> { fileParams[0].Name }
+                    }
+                }
+            }
+        };
+    }
+}

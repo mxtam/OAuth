@@ -54,8 +54,8 @@ namespace OAuth.Migrations
                 columns: new[] { "Id", "Email", "Language", "PasswordHash", "RoleId" },
                 values: new object[,]
                 {
-                    { 1, "email@mail.com", null, "$2a$11$U1W6k4LleBtpJQmyMqC.G.d3jRXbfstxssoq8FbKX4fo9X7Hjj69G", 1 },
-                    { 2, "admin_mail@mail.com", null, "$2a$11$2c.URKAwePwLPmv5vrwoU.xMxXplCzz2pahqI./Y4gPdbekxu0aQW", 2 }
+                    { 1, "email@mail.com", "uk-UA", "$2a$11$HBws4FbV6Isjf6Q.9joa7.Arl0Zd8sO6JijAF7PHFAPt83AlCG5Oy", 1 },
+                    { 2, "admin_mail@mail.com", "en-US", "$2a$11$0vCcHhtBtqYfg.YymaP7yeXmJpVmLnvL2/1J551YGKmKzvxAhXX7y", 2 }
                 });
         }
 

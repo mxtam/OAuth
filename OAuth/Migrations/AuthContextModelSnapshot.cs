@@ -58,14 +58,16 @@ namespace OAuth.Migrations
                         {
                             Id = 1,
                             Email = "email@mail.com",
-                            PasswordHash = "$2a$11$U1W6k4LleBtpJQmyMqC.G.d3jRXbfstxssoq8FbKX4fo9X7Hjj69G",
+                            Language = "uk-UA",
+                            PasswordHash = "$2a$11$HBws4FbV6Isjf6Q.9joa7.Arl0Zd8sO6JijAF7PHFAPt83AlCG5Oy",
                             RoleId = 1
                         },
                         new
                         {
                             Id = 2,
                             Email = "admin_mail@mail.com",
-                            PasswordHash = "$2a$11$2c.URKAwePwLPmv5vrwoU.xMxXplCzz2pahqI./Y4gPdbekxu0aQW",
+                            Language = "en-US",
+                            PasswordHash = "$2a$11$0vCcHhtBtqYfg.YymaP7yeXmJpVmLnvL2/1J551YGKmKzvxAhXX7y",
                             RoleId = 2
                         });
                 });

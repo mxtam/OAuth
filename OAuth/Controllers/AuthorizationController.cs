@@ -95,30 +95,9 @@ namespace OAuth.Controllers
                     RedirectUri = _authService.BuildRedirectUrl(HttpContext.Request, parameters)
                 }, new[] { CookieAuthenticationDefaults.AuthenticationScheme });
             }
+
+            result?.Principal?.SetClaim(Consts.ConsentNaming, Consts.GrantAccessValue);
             
-            var consentClaim = result.Principal.GetClaim(Consts.ConsentNaming);
-
-            //Перевіряємо, якщо користувач відхилив доступ для автентифікації 
-            //ми виходимо з його запису та перенаправляємо на сторінку автентифікації
-            if (consentClaim == Consts.DenyAccessValue || request.HasPrompt(Prompts.Consent))
-            {
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var returnUrl = HttpUtility.UrlEncode(_authService.BuildRedirectUrl(HttpContext.Request, parameters));
-                var consentRedirectUrl = $"/Consent?returnUrl={returnUrl}";
-
-                return Redirect(consentRedirectUrl);
-            }
-            
-            if (consentClaim is null || request.HasPrompt(Prompts.Consent))
-            {
-
-                var returnUrl = HttpUtility.UrlEncode(_authService.BuildRedirectUrl(HttpContext.Request, parameters));
-                var consentRedirectUrl = $"/Consent?returnUrl={returnUrl}";
-
-                return Redirect(consentRedirectUrl);
-            }
-
             var userId = result.Principal.FindFirst(ClaimTypes.Email)!.Value;
 
             //Знаходимо нашого користувача

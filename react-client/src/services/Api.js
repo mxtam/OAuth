@@ -1,5 +1,5 @@
 export async function getResources(token) {
-    const url = 'https://localhost:7002/resources';
+    const url = 'https://localhost:7002/resources/helloUser';
   
     const options = {
       method: 'GET',

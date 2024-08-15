@@ -35,6 +35,49 @@ namespace OAuth
                     "resource_server_1"
                 }
                 });
+
+                // Adding 'openid' scope
+                var openidScope = await manager.FindByNameAsync("openid");
+                if (openidScope != null)
+                {
+                    await manager.DeleteAsync(openidScope);
+                }
+
+                await manager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    DisplayName = "OpenID Connect Scope",
+                    Name = "openid",
+                    Resources = { "resource_server_1" }
+                });
+
+                // Adding 'profile' scope
+                var profileScope = await manager.FindByNameAsync("profile");
+                if (profileScope != null)
+                {
+                    await manager.DeleteAsync(profileScope);
+                }
+
+                await manager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    DisplayName = "Profile Scope",
+                    Name = "profile",
+                    Resources = { "resource_server_1" }
+                });
+
+                // Adding 'email' scope
+                var emailScope = await manager.FindByNameAsync("email");
+                if (emailScope != null)
+                {
+                    await manager.DeleteAsync(emailScope);
+                }
+
+                await manager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    DisplayName = "Email Scope",
+                    Name = "email",
+                    Resources = { "resource_server_1" }
+                });
+
             }
 
             //Додаємо web-client до списку клієнтів серверу авторизації(схожим чином можемо зробити метод, 

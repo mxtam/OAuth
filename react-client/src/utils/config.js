@@ -6,7 +6,7 @@ const authSettings = {
     silent_redirect_uri: 'http://localhost:3000/oauth/callback',
     post_logout_redirect_uri: 'http://localhost:3000/',
     response_type: 'code',
-    scope: 'api1'
+    scope: 'api1 openid profile'
 };
 
 export const authConfig = {

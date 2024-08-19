@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Primitives;
 using OpenIddict.Abstractions;
 using System.Security.Claims;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 
 namespace OAuth.Services;
@@ -59,13 +60,14 @@ public class AuthorizationService
     {
         var destinations = new List<string>();
 
-        if (claim.Type is OpenIddictConstants.Claims.Name or 
-            OpenIddictConstants.Claims.Email or OpenIddictConstants.Claims.Role or "UserLang")
+        if (claim.Type is "FirstName" or "LastName" or "Patronymic" or "Email" or "Role")
         {
             destinations.Add(OpenIddictConstants.Destinations.AccessToken);
+        }
 
-            //Якщо scope = openid додаємо клейми до Identity token
-            if (identity.HasScope(OpenIddictConstants.Scopes.OpenId))
+        if (identity.HasScope(OpenIddictConstants.Scopes.OpenId))
+        {
+            if (claim.Type is "FirstName" or "LastName" or "Patronymic" or "Email" or "UserLanguage")
             {
                 destinations.Add(OpenIddictConstants.Destinations.IdentityToken);
             }

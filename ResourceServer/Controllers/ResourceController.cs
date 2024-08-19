@@ -23,10 +23,10 @@ namespace ResourceServer.Controllers
         public IActionResult GetUserName()
         {
             //Отримуємо користувача
-            var user = HttpContext.User?.Identity?.Name;
+            var user = HttpContext.User?.Claims.FirstOrDefault(n=>n.Type == "FirstName")?.Value;
 
             //Отримуємо мову користувача з клеймів токена 
-            var userLang = HttpContext.User?.Claims?.FirstOrDefault(x=>x.Type== "UserLang")?.Value;
+            var userLang = HttpContext.User?.Claims.FirstOrDefault(l=>l.Type == "UserLanguage")?.Value;
 
 
             if (userLang == "uk-UA")

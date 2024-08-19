@@ -49,6 +49,8 @@ builder.Services.AddOpenIddict()
                 .EnableLogoutEndpointPassthrough()
                 .EnableTokenEndpointPassthrough()
                 .EnableUserinfoEndpointPassthrough();
+
+        options.SetAccessTokenLifetime(TimeSpan.FromSeconds(10));
     });
 //Adding auth service
 builder.Services.AddTransient<AuthorizationService>();

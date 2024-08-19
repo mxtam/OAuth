@@ -5,6 +5,7 @@ const userManager = new UserManager(authConfig.settings);
 
 export async function getUser() {
     const user = await userManager.getUser();
+    console.log(user);
     return user;
 }
 

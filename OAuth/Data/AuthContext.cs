@@ -33,6 +33,9 @@ namespace OAuth.Data
                 {
                     Id = 1,
                     Email = "email@mail.com",
+                    FirstName = "Jack",
+                    LastName = "Daniels",
+                    Patronymic = "Morgan",
                     //Password:password1
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("password1"),
                     //Role:User
@@ -44,6 +47,9 @@ namespace OAuth.Data
                 {
                     Id = 2,
                     Email = "admin_mail@mail.com",
+                    FirstName = "Admin",
+                    LastName = "Adminov",
+                    Patronymic = "Adminovych",
                     //Password:Admin@1
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1"),
                     //Role:Admin

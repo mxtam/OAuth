@@ -5,6 +5,12 @@ namespace OAuth.Models
     public class AuthUser
     {
         public int Id { get; set; }
+        [MaxLength(25)]
+        public string? FirstName {  get; set; }
+        [MaxLength(25)]
+        public string? LastName { get; set; }
+        [MaxLength(25)]
+        public string? Patronymic { get; set; }
         [EmailAddress]
         [MaxLength(50)]
         public string Email { get; set; } = string.Empty;

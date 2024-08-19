@@ -120,10 +120,12 @@ namespace OAuth.Controllers
                 roleType: Claims.Role);
 
             identity.SetClaim(Claims.Subject, userId)
-                .SetClaim(Claims.Email, userId)
-                .SetClaim(Claims.Name, userId)
-                .SetClaim(Claims.Role, userRole)
-                .SetClaim("UserLang", authUser.Language);
+                .SetClaim("Email", userId)
+                .SetClaim("FirstName", authUser?.FirstName)
+                .SetClaim("LastName", authUser?.LastName)
+                .SetClaim("Patronymic", authUser?.Patronymic)
+                .SetClaim("Role", userRole)
+                .SetClaim("UserLanguage", authUser?.Language);
 
             identity.SetScopes(request.GetScopes());
             identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
@@ -214,10 +216,12 @@ namespace OAuth.Controllers
                 roleType: Claims.Role);
 
             identity.SetClaim(Claims.Subject, userId)
-                .SetClaim(Claims.Email, userId)
-                .SetClaim(Claims.Name, userId)
-                .SetClaim(Claims.Role, userRole)
-                .SetClaim("UserLang", authUser.Language);
+                .SetClaim("Email", userId)
+                .SetClaim("FirstName", authUser?.FirstName)
+                .SetClaim("LastName", authUser?.LastName)
+                .SetClaim("Patronymic", authUser?.Patronymic)
+                .SetClaim("Role", userRole)
+                .SetClaim("UserLanguage", authUser?.Language);
 
             identity.SetDestinations(c => AuthorizationService.GetDestinations(identity, c));
 

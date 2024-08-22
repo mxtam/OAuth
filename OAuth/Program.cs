@@ -82,7 +82,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("https://localhost:7002")
             .AllowAnyHeader();
 
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader();
     });
 });

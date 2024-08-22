@@ -43,7 +43,11 @@ namespace ResourceServer.Controllers
         {
             const double MAX_FILE_SIZE = 20 * 1024 * 1024;
 
-            var userName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "Email")?.Value;
+            var firstName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "FirstName")?.Value;
+
+            var lastName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "FirstName")?.Value;
+
+            var userName = firstName + lastName;
 
             var guid = Guid.NewGuid();
 
@@ -87,7 +91,7 @@ namespace ResourceServer.Controllers
                     var fileConnection = new ResourceFileConnection
                     {
                         IdResourceFile = guid,
-                        Username = userName
+                        UserName = userName
                     };
 
                     await _context.ResourceFiles.AddAsync(resourceFile);
@@ -112,7 +116,7 @@ namespace ResourceServer.Controllers
         {
             var userName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "Email")?.Value;
 
-            var usersFiles = await _context.ResourceFileConnections.Where(f => f.Username == userName)
+            var usersFiles = await _context.ResourceFileConnections.Where(f => f.UserName == userName)
                 .Include(f => f.IdResourceFileNavigation)
                 .Select(f => new GetFilesDto
                 {
@@ -132,7 +136,7 @@ namespace ResourceServer.Controllers
                 {
                     StreamId = c.IdResourceFile,
                     FileName = ResourceFileService.ReturnFileName(c.IdResourceFileNavigation.Name),
-                    UserName = c.Username
+                    UserName = c.UserName
                 }).ToListAsync();
 
             return Ok(files);
@@ -175,7 +179,7 @@ namespace ResourceServer.Controllers
                 .OrderBy(rf => rf.IdResourceFileNavigation.CreationTime).Select(rf => new 
                 { 
                     rf.IdResourceFileNavigation.CreationTime,
-                    rf.Username
+                    rf.UserName
                 }).LastOrDefaultAsync();
 
             return Ok(lastFileDate);

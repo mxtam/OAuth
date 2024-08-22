@@ -161,11 +161,11 @@ namespace OAuth
                     DisplayName = "React client application",
                     RedirectUris =
                     {
-                        new Uri("http://localhost:3000/oauth/callback")
+                        new Uri("http://localhost:5173/oauth/callback")
                     },
                     PostLogoutRedirectUris =
                     {
-                        new Uri("http://localhost:3000/")
+                        new Uri("http://localhost:5173/")
                     },
                     Permissions =
                     {

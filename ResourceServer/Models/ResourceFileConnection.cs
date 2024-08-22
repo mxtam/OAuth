@@ -6,8 +6,8 @@
 
         public Guid IdResourceFile { get; set; }
 
-        public string Username { get; set; }
+        public string? UserName { get; set; }
 
-        public virtual ResourceFile IdResourceFileNavigation { get; set; }
+        public virtual ResourceFile? IdResourceFileNavigation { get; set; }
     }
 }

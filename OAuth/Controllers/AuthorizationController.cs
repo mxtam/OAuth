@@ -98,11 +98,11 @@ namespace OAuth.Controllers
 
             result?.Principal?.SetClaim(Consts.ConsentNaming, Consts.GrantAccessValue);
             
-            var userId = result.Principal.FindFirst(ClaimTypes.Email)!.Value;
+            var userEmail = result.Principal.FindFirst(ClaimTypes.Email)!.Value;
 
             //Знаходимо нашого користувача
-            var authUser = await _authContext.AuthUsers.Include(b=>b.Role).FirstOrDefaultAsync(x => x.Email == userId);
-            var userRole = authUser.Role.RoleName;
+            var authUser = await _authContext.AuthUsers.Include(u=>u.Role).FirstOrDefaultAsync(u => u.Email == userEmail);
+
             if (authUser != null)
             {
                 //Якщо в користувача пусте поле мови, беремо мову з ContentLanguage та додаємо користувачу 
@@ -119,12 +119,13 @@ namespace OAuth.Controllers
                 nameType: Claims.Name,
                 roleType: Claims.Role);
 
-            identity.SetClaim(Claims.Subject, userId)
-                .SetClaim("Email", userId)
+            identity.SetClaim(Claims.Subject, userEmail)
+                .SetClaim("Id", authUser?.Id)
+                .SetClaim("Email", userEmail)
                 .SetClaim("FirstName", authUser?.FirstName)
                 .SetClaim("LastName", authUser?.LastName)
                 .SetClaim("Patronymic", authUser?.Patronymic)
-                .SetClaim("Role", userRole)
+                .SetClaim("Role", authUser?.Role?.RoleName)
                 .SetClaim("UserLanguage", authUser?.Language);
 
             identity.SetScopes(request.GetScopes());
@@ -136,7 +137,7 @@ namespace OAuth.Controllers
             {
                 CodeChallenge = codeChallenge,
                 CodeChallengeMethod = codeChallengeMethod,
-                UserId = userId,
+                UserId = userEmail,
                 CreatedDate = DateTime.UtcNow,
                 UserLanguage = lang
             };
@@ -159,10 +160,10 @@ namespace OAuth.Controllers
                 throw new InvalidOperationException("The specified grant type is not supported.");
 
             var result = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-            var userId = result.Principal.GetClaim(Claims.Subject);
 
-            var authUser = await _authContext.AuthUsers.Include(b => b.Role).FirstOrDefaultAsync(x => x.Email == userId);
-            var userRole = authUser.Role.RoleName;
+            var userSub = result.Principal.GetClaim(Claims.Subject);
+
+            var authUser = await _authContext.AuthUsers.Include(b => b.Role).FirstOrDefaultAsync(x => x.Email == userSub);
 
             var codeChallenge = string.Empty;
             var codeChallengeMethod = string.Empty;
@@ -170,7 +171,7 @@ namespace OAuth.Controllers
             //Дістаємо з БД наш codeChallenge та codeMethod та записуємо в змінні
             var authCodeChallenge = await _authContext.AuthCodeChallenge
                                                         .OrderByDescending(c => c.CreatedDate)
-                                                            .FirstOrDefaultAsync(c => c.UserId == userId);
+                                                            .FirstOrDefaultAsync(c => c.UserId == userSub);
 
             if (authCodeChallenge != null)
             {
@@ -197,7 +198,7 @@ namespace OAuth.Controllers
             }
 
             //Повертаємо помилку, якщо користувача не знайдено
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userSub))
             {
                 return Forbid(
                     authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
@@ -215,12 +216,13 @@ namespace OAuth.Controllers
                 nameType: Claims.Name,
                 roleType: Claims.Role);
 
-            identity.SetClaim(Claims.Subject, userId)
-                .SetClaim("Email", userId)
+            identity.SetClaim(Claims.Subject, userSub)
+                .SetClaim("Id", authUser?.Id)
+                .SetClaim("Email", userSub)
                 .SetClaim("FirstName", authUser?.FirstName)
                 .SetClaim("LastName", authUser?.LastName)
                 .SetClaim("Patronymic", authUser?.Patronymic)
-                .SetClaim("Role", userRole)
+                .SetClaim("Role", authUser?.Role?.RoleName)
                 .SetClaim("UserLanguage", authUser?.Language);
 
             identity.SetDestinations(c => AuthorizationService.GetDestinations(identity, c));

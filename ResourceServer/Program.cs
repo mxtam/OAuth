@@ -79,17 +79,11 @@ app.UseSwagger();
 app.UseSwaggerUI(c => 
     {
         c.OAuthClientId("web-client");
-        c.OAuthClientSecret("901564A5-E7FE-42CB-B10D-61EF6A8F3654");
         c.OAuthUsePkce();
     });
 
 
 app.UseHttpsRedirection();
-
-//app.UseRequestLocalization(new RequestLocalizationOptions
-//{
-//    ApplyCurrentCultureToResponseHeaders = true
-//});
 
 app.UseCors();
 

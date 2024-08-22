@@ -60,14 +60,14 @@ public class AuthorizationService
     {
         var destinations = new List<string>();
 
-        if (claim.Type is "FirstName" or "LastName" or "Patronymic" or "Email" or "Role")
+        if (claim.Type is "Id" or "FirstName" or "LastName" or "Patronymic" or "Email" or "Role")
         {
             destinations.Add(OpenIddictConstants.Destinations.AccessToken);
         }
 
         if (identity.HasScope(OpenIddictConstants.Scopes.OpenId))
         {
-            if (claim.Type is "FirstName" or "LastName" or "Patronymic" or "Email" or "UserLanguage")
+            if (claim.Type is "Id" or "FirstName" or "LastName" or "Patronymic" or "Email" or "Role" or "UserLanguage")
             {
                 destinations.Add(OpenIddictConstants.Destinations.IdentityToken);
             }

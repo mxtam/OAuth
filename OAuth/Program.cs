@@ -33,8 +33,11 @@ builder.Services.AddOpenIddict()
 
         options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
 
+
         //Enable Authorization Code Flow+PKCE
-        options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
+        options.AllowAuthorizationCodeFlow()
+                .RequireProofKeyForCodeExchange()
+                .AllowRefreshTokenFlow();
 
         //Encryption key to connect our servers 
         options.AddEncryptionKey(new SymmetricSecurityKey(
@@ -50,7 +53,8 @@ builder.Services.AddOpenIddict()
                 .EnableTokenEndpointPassthrough()
                 .EnableUserinfoEndpointPassthrough();
 
-        options.SetAccessTokenLifetime(TimeSpan.FromSeconds(10));
+        options.SetAccessTokenLifetime(TimeSpan.FromHours(10));
+        options.SetRefreshTokenLifetime(TimeSpan.FromDays(15));
     });
 //Adding auth service
 builder.Services.AddTransient<AuthorizationService>();

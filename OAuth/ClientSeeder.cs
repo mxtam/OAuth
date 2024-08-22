@@ -30,10 +30,7 @@ namespace OAuth
                 {
                     DisplayName = "Api scope",
                     Name = "api1",
-                    Resources =
-                {
-                    "resource_server_1"
-                }
+                    Resources ={ "resource_server_1" }
                 });
 
                 // Adding 'openid' scope
@@ -78,6 +75,18 @@ namespace OAuth
                     Resources = { "resource_server_1" }
                 });
 
+                var offlineAccessScope = await manager.FindByNameAsync("offline_access");
+                if (offlineAccessScope != null)
+                {
+                    await manager.DeleteAsync(offlineAccessScope);
+                }
+
+                await manager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    DisplayName = "Offline Access (Refresh Token) Scope",
+                    Name = "offline_access",
+                    Resources = { "resource_server_1" }
+                });
             }
 
             //Додаємо web-client до списку клієнтів серверу авторизації(схожим чином можемо зробити метод, 
@@ -100,7 +109,6 @@ namespace OAuth
                 await manager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
                     ClientId = "web-client",
-                    ClientSecret = "901564A5-E7FE-42CB-B10D-61EF6A8F3654",
                     ConsentType = ConsentTypes.Explicit,
                     DisplayName = "Swagger client application",
                     RedirectUris =
@@ -123,10 +131,10 @@ namespace OAuth
                     Permissions.Scopes.Roles,
                    $"{Permissions.Prefixes.Scope}api1"
                 },
-                    //Requirements =
-                    //{
-                    //    Requirements.Features.ProofKeyForCodeExchange
-                    //}
+                    Requirements =
+                    {
+                        Requirements.Features.ProofKeyForCodeExchange
+                    }
                 });
             }
 
@@ -149,7 +157,6 @@ namespace OAuth
                 await manager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
                     ClientId = "react-client",
-                    ClientSecret = "901564A5-E7FE-42CB-B10D-61EF6A8F3654",
                     ConsentType = ConsentTypes.Explicit,
                     DisplayName = "React client application",
                     RedirectUris =
@@ -166,16 +173,17 @@ namespace OAuth
                         Permissions.Endpoints.Logout,
                         Permissions.Endpoints.Token,
                         Permissions.GrantTypes.AuthorizationCode,
+                        Permissions.GrantTypes.RefreshToken,
                         Permissions.ResponseTypes.Code,
                         Permissions.Scopes.Email,
                         Permissions.Scopes.Profile,
                         Permissions.Scopes.Roles,
                        $"{Permissions.Prefixes.Scope}api1"
                     },
-                    //Requirements =
-                    //{
-                    //    Requirements.Features.ProofKeyForCodeExchange
-                    //}
+                    Requirements =
+                    {
+                        Requirements.Features.ProofKeyForCodeExchange
+                    }
                 });
             }
             
@@ -198,7 +206,6 @@ namespace OAuth
                 await manager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
                     ClientId = "oidc-debugger",
-                    ClientSecret = "901564A5-E7FE-42CB-B10D-61EF6A8F3654",
                     ConsentType = ConsentTypes.Explicit,
                     DisplayName = "Postman client application",
                     RedirectUris =
@@ -219,12 +226,13 @@ namespace OAuth
                         Permissions.Scopes.Email,
                         Permissions.Scopes.Profile,
                         Permissions.Scopes.Roles,
-                        $"{Permissions.Prefixes.Scope}api1"
+                        $"{Permissions.Prefixes.Scope}api1",
+
                     },
-                    //Requirements =
-                    //{
-                    //    Requirements.Features.ProofKeyForCodeExchange
-                    //}
+                    Requirements =
+                    {
+                        Requirements.Features.ProofKeyForCodeExchange
+                    }
                 });
             }
 

@@ -1,14 +1,31 @@
-﻿namespace ResourceServer.Data
+﻿using System.Buffers;
+
+namespace ResourceServer.Data
 {
     public class ResourceFileService
     {
         public static async Task<byte[]> FileToByteArrayAsync(IFormFile file)
         {
-            using (var fileStream =  file.OpenReadStream())
-            using (var memoryStream = new MemoryStream())
+            const int bufferSize = 512 * 1024;
+
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+
+            try
             {
-                await fileStream.CopyToAsync(memoryStream);
-                return memoryStream.ToArray();
+                using (var fileStream = file.OpenReadStream())
+                using (var memoryStream = new MemoryStream())
+                {
+                    int bytesRead;
+                    while ((bytesRead = await fileStream.ReadAsync(buffer, 0, bufferSize)) > 0)
+                    {
+                        await memoryStream.WriteAsync(buffer, 0, bytesRead);
+                    }
+                    return memoryStream.ToArray();
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 

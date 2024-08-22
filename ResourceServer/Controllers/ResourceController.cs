@@ -9,24 +9,24 @@ namespace ResourceServer.Controllers
 {
     [ApiController]
     [Route("resources")]
-    public class ResourceController:Controller
+    public class ResourceController : Controller
     {
         private readonly ResourceContext _context;
 
         public ResourceController(ResourceContext context)
-        { 
+        {
             _context = context;
-        }    
+        }
 
         [Authorize]
         [HttpGet("helloUser")]
         public IActionResult GetUserName()
         {
             //Отримуємо користувача
-            var user = HttpContext.User?.Claims.FirstOrDefault(n=>n.Type == "FirstName")?.Value;
+            var user = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "FirstName")?.Value;
 
             //Отримуємо мову користувача з клеймів токена 
-            var userLang = HttpContext.User?.Claims.FirstOrDefault(l=>l.Type == "UserLanguage")?.Value;
+            var userLang = HttpContext.User?.Claims.FirstOrDefault(l => l.Type == "UserLanguage")?.Value;
 
 
             if (userLang == "uk-UA")
@@ -43,7 +43,7 @@ namespace ResourceServer.Controllers
         {
             const double MAX_FILE_SIZE = 20 * 1024 * 1024;
 
-            var userName = HttpContext.User?.Identity?.Name;
+            var userName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "Email")?.Value;
 
             var guid = Guid.NewGuid();
 
@@ -97,12 +97,12 @@ namespace ResourceServer.Controllers
                     await tranasction.CommitAsync();
                 }
                 catch (Exception ex)
-                { 
+                {
                     await tranasction.RollbackAsync();
                     return BadRequest(ex);
                 }
             }
-                
+
             return Ok("Файл збережено успішно");
         }
 
@@ -110,10 +110,10 @@ namespace ResourceServer.Controllers
         [HttpGet("myFiles/list")]
         public async Task<ActionResult<List<GetFilesDto>>> GetMyFiles()
         {
-            var userName = HttpContext.User?.Identity?.Name;
+            var userName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "Email")?.Value;
 
-            var usersFiles = await _context.ResourceFileConnections.Where(f=>f.Username==userName)
-                .Include(f=>f.IdResourceFileNavigation)
+            var usersFiles = await _context.ResourceFileConnections.Where(f => f.Username == userName)
+                .Include(f => f.IdResourceFileNavigation)
                 .Select(f => new GetFilesDto
                 {
                     StreamId = f.IdResourceFile,
@@ -127,10 +127,10 @@ namespace ResourceServer.Controllers
         public async Task<ActionResult<List<GetFilesWithUsernameDto>>> GetFiles()
         {
             var files = await _context.ResourceFileConnections
-                .Include(c=>c.IdResourceFileNavigation)
-                .Select(c => new GetFilesWithUsernameDto 
-                { 
-                    StreamId =c.IdResourceFile,
+                .Include(c => c.IdResourceFileNavigation)
+                .Select(c => new GetFilesWithUsernameDto
+                {
+                    StreamId = c.IdResourceFile,
                     FileName = ResourceFileService.ReturnFileName(c.IdResourceFileNavigation.Name),
                     UserName = c.Username
                 }).ToListAsync();
@@ -139,9 +139,9 @@ namespace ResourceServer.Controllers
         }
 
         [HttpGet("files/{fileName}")]
-        public async Task<ActionResult> DownloadFile(string fileName)
+        public async Task<ActionResult> DownloadFileByname(string fileName)
         {
-            var file = await _context.ResourceFiles.Where(f => 
+            var file = await _context.ResourceFiles.Where(f =>
             f.Name.StartsWith(ResourceFileService.FileStartsWith(fileName)))
                 .OrderByDescending(f => f.CreationTime).FirstOrDefaultAsync();
 
@@ -151,6 +151,34 @@ namespace ResourceServer.Controllers
             }
 
             return File(file.FileStream, "application/octet-stream", ResourceFileService.ReturnFileName(file.Name));
+        }
+
+
+        [HttpGet("files/{streamId:guid}")]
+        public async Task<ActionResult> DownloadFileById(Guid streamId)
+        {
+            var file = await _context.ResourceFiles.Where(f =>f.StreamId == streamId).FirstOrDefaultAsync();
+
+            if (file == null)
+            {
+                return BadRequest("Файл не знайдено");
+            }
+
+            return File(file.FileStream, "application/octet-stream", ResourceFileService.ReturnFileName(file.Name));
+        }
+
+        [HttpGet("lastFileDate")]
+        public async Task<ActionResult> GetLastFileDate()
+        {
+            var lastFileDate = await _context.ResourceFileConnections
+                .Include(rf => rf.IdResourceFileNavigation)
+                .OrderBy(rf => rf.IdResourceFileNavigation.CreationTime).Select(rf => new 
+                { 
+                    rf.IdResourceFileNavigation.CreationTime,
+                    rf.Username
+                }).LastOrDefaultAsync();
+
+            return Ok(lastFileDate);
         }
     }
 }

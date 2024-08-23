@@ -12,8 +12,8 @@ using OAuth.Data;
 namespace OAuth.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20240619072104_addedRolesModel")]
-    partial class addedRolesModel
+    [Migration("20240823091108_AddedAuthModels")]
+    partial class AddedAuthModels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,18 +38,59 @@ namespace OAuth.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
+                    b.Property<string>("Language")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("RoleId")
+                    b.Property<string>("Patronymic")
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
+                    b.Property<int>("RoleId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AuthUsers");
+                    b.ToTable("AuthUsers", "Auth");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Email = "email@mail.com",
+                            FirstName = "Jack",
+                            Language = "uk-UA",
+                            LastName = "Daniels",
+                            PasswordHash = "$2a$11$geB.D5DFVJx.fqT0wsQoduawycHn1wmlg.RMGh/ZMqN5/HBvzp30a",
+                            Patronymic = "Morgan",
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Email = "admin_mail@mail.com",
+                            FirstName = "Admin",
+                            Language = "en-US",
+                            LastName = "Adminov",
+                            PasswordHash = "$2a$11$Du.mTptlaa6qjeaiOtFG9OoUt.956Ebhx5JQUwA2U2ziDPV.A/LeK",
+                            Patronymic = "Adminovych",
+                            RoleId = 2
+                        });
                 });
 
             modelBuilder.Entity("OAuth.Models.AuthorizationCodeChallenge", b =>
@@ -62,11 +103,13 @@ namespace OAuth.Migrations
 
                     b.Property<string>("CodeChallenge")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
 
                     b.Property<string>("CodeChallengeMethod")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -75,9 +118,14 @@ namespace OAuth.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserLanguage")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
                     b.HasKey("Id");
 
-                    b.ToTable("AuthCodeChallenge");
+                    b.ToTable("AuthCodeChallenges", "Auth");
                 });
 
             modelBuilder.Entity("OAuth.Models.Role", b =>
@@ -95,7 +143,7 @@ namespace OAuth.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", "Auth");
 
                     b.HasData(
                         new
@@ -324,8 +372,10 @@ namespace OAuth.Migrations
             modelBuilder.Entity("OAuth.Models.AuthUser", b =>
                 {
                     b.HasOne("OAuth.Models.Role", "Role")
-                        .WithMany("authUsers")
-                        .HasForeignKey("RoleId");
+                        .WithMany("AuthUsers")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Role");
                 });
@@ -356,7 +406,7 @@ namespace OAuth.Migrations
 
             modelBuilder.Entity("OAuth.Models.Role", b =>
                 {
-                    b.Navigation("authUsers");
+                    b.Navigation("AuthUsers");
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>

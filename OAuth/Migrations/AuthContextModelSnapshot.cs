@@ -63,7 +63,7 @@ namespace OAuth.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AuthUsers");
+                    b.ToTable("AuthUsers", "Auth");
 
                     b.HasData(
                         new
@@ -73,7 +73,7 @@ namespace OAuth.Migrations
                             FirstName = "Jack",
                             Language = "uk-UA",
                             LastName = "Daniels",
-                            PasswordHash = "$2a$11$zEvf2CP8Mp76j84h0LSyWejt8V0OS.Nxfa7tw3aSYCl98r5XvV8ty",
+                            PasswordHash = "$2a$11$geB.D5DFVJx.fqT0wsQoduawycHn1wmlg.RMGh/ZMqN5/HBvzp30a",
                             Patronymic = "Morgan",
                             RoleId = 1
                         },
@@ -84,7 +84,7 @@ namespace OAuth.Migrations
                             FirstName = "Admin",
                             Language = "en-US",
                             LastName = "Adminov",
-                            PasswordHash = "$2a$11$NKHr0CC.cSsOv/9ENg4ROuVktKI6TXUAxA7x/ijPtEJxJnUMftE02",
+                            PasswordHash = "$2a$11$Du.mTptlaa6qjeaiOtFG9OoUt.956Ebhx5JQUwA2U2ziDPV.A/LeK",
                             Patronymic = "Adminovych",
                             RoleId = 2
                         });
@@ -122,7 +122,7 @@ namespace OAuth.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuthCodeChallenge");
+                    b.ToTable("AuthCodeChallenges", "Auth");
                 });
 
             modelBuilder.Entity("OAuth.Models.Role", b =>
@@ -140,7 +140,7 @@ namespace OAuth.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", "Auth");
 
                     b.HasData(
                         new
@@ -369,7 +369,7 @@ namespace OAuth.Migrations
             modelBuilder.Entity("OAuth.Models.AuthUser", b =>
                 {
                     b.HasOne("OAuth.Models.Role", "Role")
-                        .WithMany("authUsers")
+                        .WithMany("AuthUsers")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -403,7 +403,7 @@ namespace OAuth.Migrations
 
             modelBuilder.Entity("OAuth.Models.Role", b =>
                 {
-                    b.Navigation("authUsers");
+                    b.Navigation("AuthUsers");
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>

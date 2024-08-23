@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using ResourceServer.Data;
 using ResourceServer.Dto;
 using ResourceServer.Models;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ResourceServer.Controllers
 {
@@ -13,9 +15,11 @@ namespace ResourceServer.Controllers
     {
         private readonly ResourceContext _context;
 
-        public ResourceController(ResourceContext context)
+        private readonly HttpClient _httpClient;
+        public ResourceController(ResourceContext context, HttpClient httpClient)
         {
             _context = context;
+            _httpClient = httpClient;
         }
 
         [Authorize]
@@ -45,9 +49,9 @@ namespace ResourceServer.Controllers
 
             var firstName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "FirstName")?.Value;
 
-            var lastName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "FirstName")?.Value;
+            var lastName = HttpContext.User?.Claims.FirstOrDefault(n => n.Type == "LastName")?.Value;
 
-            var userName = firstName + lastName;
+            var userName = $"{ firstName }  { lastName}";
 
             var guid = Guid.NewGuid();
 
@@ -99,6 +103,14 @@ namespace ResourceServer.Controllers
                     await _context.SaveChangesAsync();
 
                     await tranasction.CommitAsync();
+
+                    var lastFileDate = new GetLastFileDateDto
+                    {
+                        DateTimeCreation = resourceFile.CreationTime.ToUniversalTime(),
+                        UserName = userName,
+                    };
+
+                    return Ok(lastFileDate);
                 }
                 catch (Exception ex)
                 {
@@ -106,8 +118,6 @@ namespace ResourceServer.Controllers
                     return BadRequest(ex);
                 }
             }
-
-            return Ok("Файл збережено успішно");
         }
 
         [Authorize]
@@ -172,17 +182,31 @@ namespace ResourceServer.Controllers
         }
 
         [HttpGet("lastFileDate")]
-        public async Task<ActionResult> GetLastFileDate()
+        public async Task<ActionResult<GetLastFileDateDto>> GetLastFileDate()
         {
             var lastFileDate = await _context.ResourceFileConnections
                 .Include(rf => rf.IdResourceFileNavigation)
-                .OrderBy(rf => rf.IdResourceFileNavigation.CreationTime).Select(rf => new 
+                .OrderBy(rf => rf.IdResourceFileNavigation.CreationTime).Select(rf => new GetLastFileDateDto
                 { 
-                    rf.IdResourceFileNavigation.CreationTime,
-                    rf.UserName
+                    DateTimeCreation = rf.IdResourceFileNavigation.CreationTime.ToUniversalTime(),
+                    UserName = rf.UserName
                 }).LastOrDefaultAsync();
 
             return Ok(lastFileDate);
+        }
+
+        [HttpGet("users")]
+        public async Task<ActionResult<List<UserDto>>> GetAuthUsers()
+        {
+            _httpClient.DefaultRequestHeaders.Add("Origin", "http://localhost:7002");
+
+            var response = await _httpClient.GetAsync("https://localhost:7000/getAllUser");
+            if (response.IsSuccessStatusCode)
+            {
+                return Ok(await response.Content.ReadFromJsonAsync<List<UserDto>>());
+            }
+
+            return BadRequest();
         }
     }
 }

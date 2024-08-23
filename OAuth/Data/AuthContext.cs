@@ -3,29 +3,29 @@ using Microsoft.EntityFrameworkCore.Storage;
 using OAuth.Models;
 namespace OAuth.Data
 {
-    public class AuthContext:DbContext
+    public class AuthContext : DbContext
     {
-        public DbSet<AuthorizationCodeChallenge> AuthCodeChallenge { get; set; }
+        public DbSet<AuthorizationCodeChallenge> AuthCodeChallenges { get; set; }
         public DbSet<AuthUser> AuthUsers { get; set; }
         public DbSet<Role> Roles { get; set; }
 
-        
-        
-        public AuthContext(DbContextOptions<AuthContext> options) : base(options) {
-            
+        public AuthContext(DbContextOptions<AuthContext> options) : base(options)
+        {
+
         }
 
-        public AuthContext()
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
-        }
+            modelBuilder.Entity<AuthUser>().ToTable("AuthUsers", "Auth");
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder) 
-        {
+            modelBuilder.Entity<AuthorizationCodeChallenge>().ToTable("AuthCodeChallenges", "Auth");
+
+            modelBuilder.Entity<Role>().ToTable("Roles", "Auth");
+
             //Заповнюємо початковими даними таблицю Role
             modelBuilder.Entity<Role>()
-                .HasData(new Role{ Id=1, RoleName ="User" }, 
-                            new Role { Id = 2, RoleName = "Admin"});
+                .HasData(new Role { Id = 1, RoleName = "User" },
+                            new Role { Id = 2, RoleName = "Admin" });
 
             //Заповнюємо початковими даними таблицю AuthUser
             modelBuilder.Entity<AuthUser>()
@@ -54,8 +54,9 @@ namespace OAuth.Data
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@1"),
                     //Role:Admin
                     RoleId = 2,
-                    Language= "en-US"
+                    Language = "en-US"
                 })
-;        }
+;
+        }
     }
 }

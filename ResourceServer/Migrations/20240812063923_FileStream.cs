@@ -11,13 +11,14 @@ namespace ResourceServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"CREATE TABLE ResourceFiles AS FileTable
+            migrationBuilder.Sql(@"CREATE TABLE EFB.ResourceFiles AS FileTable
                                     WITH (
                                     FILETABLE_DIRECTORY = 'FileStream',
                                     FILETABLE_COLLATE_FILENAME = database_default );");
 
             migrationBuilder.CreateTable(
                 name: "ResourceFileConnection",
+                schema : "EFB",
                 columns: table => new
                 {
                     ID = table.Column<int>(type: "int", nullable: false)
@@ -31,6 +32,7 @@ namespace ResourceServer.Migrations
                     table.ForeignKey(
                         name: "FK_Resource_FileConnections_ResourceFile",
                         column: x => x.ID_ResourceFile,
+                        principalSchema: "EFB",
                         principalTable: "ResourceFiles",
                         principalColumn: "stream_id");
                 },
@@ -38,6 +40,7 @@ namespace ResourceServer.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_ResourceFileConnection_ID_ResourceFile",
+                schema: "EFB",
                 table: "ResourceFileConnection",
                 column: "ID_ResourceFile");
         }
@@ -46,10 +49,12 @@ namespace ResourceServer.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ResourceFileConnection");
+                name: "ResourceFileConnection",
+                schema: "EFB");
 
             migrationBuilder.DropTable(
-                name: "ResourceFiles");
+                name: "ResourceFiles", 
+                schema: "EFB");
         }
     }
 }

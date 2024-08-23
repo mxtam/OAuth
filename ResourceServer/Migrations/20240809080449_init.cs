@@ -10,13 +10,13 @@ namespace ResourceServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-
+            migrationBuilder.Sql("CREATE SCHEMA EFB;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-
+            migrationBuilder.Sql("DROP SCHEMA EFB;");
         }
     }
 }

@@ -48,7 +48,7 @@ namespace OAuth.Controllers
             var request = HttpContext.GetOpenIddictServerRequest() ??
                           throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-           //Перевіряємо чи на сервері авторизації існує клієнт з Id з запиту
+            //Перевіряємо чи на сервері авторизації існує клієнт з Id з запиту
             var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
                               throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
 
@@ -97,11 +97,11 @@ namespace OAuth.Controllers
             }
 
             result?.Principal?.SetClaim(Consts.ConsentNaming, Consts.GrantAccessValue);
-            
+
             var userEmail = result.Principal.FindFirst(ClaimTypes.Email)!.Value;
 
             //Знаходимо нашого користувача
-            var authUser = await _authContext.AuthUsers.Include(u=>u.Role).FirstOrDefaultAsync(u => u.Email == userEmail);
+            var authUser = await _authContext.AuthUsers.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == userEmail);
 
             if (authUser != null)
             {
@@ -112,7 +112,7 @@ namespace OAuth.Controllers
                     _authContext.AuthUsers.Update(authUser);
                 }
             }
-            
+
             //Встановлюємо клейми для користувача
             var identity = new ClaimsIdentity(
                 authenticationType: TokenValidationParameters.DefaultAuthenticationType,
@@ -142,7 +142,7 @@ namespace OAuth.Controllers
                 UserLanguage = lang
             };
 
-            await _authContext.AuthCodeChallenge.AddAsync(authCodeChallenge);
+            await _authContext.AuthCodeChallenges.AddAsync(authCodeChallenge);
 
             //Зберігаємо зміни в БД
             await _authContext.SaveChangesAsync();
@@ -169,7 +169,7 @@ namespace OAuth.Controllers
             var codeChallengeMethod = string.Empty;
 
             //Дістаємо з БД наш codeChallenge та codeMethod та записуємо в змінні
-            var authCodeChallenge = await _authContext.AuthCodeChallenge
+            var authCodeChallenge = await _authContext.AuthCodeChallenges
                                                         .OrderByDescending(c => c.CreatedDate)
                                                             .FirstOrDefaultAsync(c => c.UserId == userSub);
 

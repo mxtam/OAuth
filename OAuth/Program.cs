@@ -68,6 +68,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         c.LoginPath = "/Authenticate";
     });
 
+builder.Services.AddAuthorization();
 //Adding client seeder service for our clients on auth server
 builder.Services.AddTransient<ClientsSeeder>();
 
@@ -78,10 +79,11 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        //Adding esource server to CORS
+        //Adding resource server to CORS
         policy.WithOrigins("https://localhost:7002")
             .AllowAnyHeader();
 
+        //Adding react clien to CORS
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader();
     });

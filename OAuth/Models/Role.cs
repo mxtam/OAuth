@@ -8,6 +8,6 @@ namespace OAuth.Models
         [Required]
         [MaxLength(25)]
         public string RoleName { get; set; } = string.Empty;
-        public List<AuthUser>? authUsers { get; set; }
+        public List<AuthUser>? AuthUsers { get; set; }
     }
 }

@@ -125,6 +125,7 @@ namespace OAuth
                     Permissions.Endpoints.Logout,
                     Permissions.Endpoints.Token,
                     Permissions.GrantTypes.AuthorizationCode,
+                    Permissions.GrantTypes.RefreshToken,
                     Permissions.ResponseTypes.Code,
                     Permissions.Scopes.Email,
                     Permissions.Scopes.Profile,
@@ -161,11 +162,11 @@ namespace OAuth
                     DisplayName = "React client application",
                     RedirectUris =
                     {
-                        new Uri("http://localhost:5173/oauth/callback")
+                        new Uri("http://localhost:3000/oauth/callback")
                     },
                     PostLogoutRedirectUris =
                     {
-                        new Uri("http://localhost:5173/")
+                        new Uri("http://localhost:3000/")
                     },
                     Permissions =
                     {

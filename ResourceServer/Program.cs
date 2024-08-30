@@ -44,7 +44,8 @@ builder.Services.AddSwaggerGen(c =>
                 TokenUrl = new Uri("https://localhost:7000/connect/token"),
                 Scopes = new Dictionary<string, string>
                 {
-                    { "api1", "resource server scope" }
+                    { "api1", "resource server scope" },
+                    { "offline_access", "refresh token scope"}
                 }
             },
         }
@@ -66,7 +67,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:3000")
             .AllowAnyHeader();
     });
 });

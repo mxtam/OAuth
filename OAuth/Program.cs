@@ -31,7 +31,7 @@ builder.Services.AddOpenIddict()
                 .SetTokenEndpointUris("connect/token")
                 .SetUserinfoEndpointUris("connect/userinfo");
 
-        options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
+        options.RegisterScopes("openid", "profile", "email", "offline_access", "api1");
 
 
         //Enable Authorization Code Flow+PKCE
@@ -53,9 +53,13 @@ builder.Services.AddOpenIddict()
                 .EnableTokenEndpointPassthrough()
                 .EnableUserinfoEndpointPassthrough();
 
-        options.SetAccessTokenLifetime(TimeSpan.FromHours(10));
-        options.SetRefreshTokenLifetime(TimeSpan.FromDays(15));
-    });
+        options.SetAccessTokenLifetime(TimeSpan.FromMinutes(10));
+        options.SetRefreshTokenLifetime(TimeSpan.FromDays(1));
+    })
+    .AddValidation(options =>
+    {
+        options.EnableTokenEntryValidation();
+    }); 
 //Adding auth service
 builder.Services.AddTransient<AuthorizationService>();
 
@@ -84,12 +88,21 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();
 
         //Adding react clien to CORS
-        policy.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader();
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
 var app = builder.Build();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Frame-Options", "ALLOW-FROM http://localhost:3000");
+    context.Response.Headers.Append("Content-Security-Policy", "frame-ancestors 'self' http://localhost:3000");
+    await next();
+});
 
 using (var scope = app.Services.CreateScope())
 {

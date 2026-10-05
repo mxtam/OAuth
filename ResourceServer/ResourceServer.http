@@ -1,6 +1,0 @@
-@ResourceServer_HostAddress = http://localhost:5150
-
-GET {{ResourceServer_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
